@@ -5,7 +5,7 @@ import { Statistic } from "antd";
 import { useTimer } from "react-timer-hook";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface InterviewControlsProps {
   onTimeout: (answer: string) => void;
@@ -20,34 +20,40 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
     useSelector((state: RootState) => state.interview);
   const currentQuestion = questionsAndAnswers[currentQuestionIndex];
 
-  const expiryTimestamp =
-    currentQuestion && !disabled && !currentQuestion.answer
-      ? new Date(Date.now() + (currentQuestion.time || 30) * 1000) // Default to 30s if time is invalid
-      : new Date();
+  // Use a ref to ensure onExpire always has the latest onTimeout function
+  const onTimeoutRef = useRef(onTimeout);
+  useEffect(() => {
+    onTimeoutRef.current = onTimeout;
+  }, [onTimeout]);
 
   const { seconds, minutes, restart, pause } = useTimer({
-    expiryTimestamp,
-    onExpire: () => !disabled && !currentQuestion?.answer && onTimeout(""),
-    autoStart: false, // Controlled manually
+    // The expiryTimestamp will be set dynamically by the effect below
+    expiryTimestamp: new Date(),
+    onExpire: () => {
+      // The ref ensures we always call the latest function from props
+      onTimeoutRef.current("I ran out of time.");
+    },
+    autoStart: false,
   });
 
-  // Restart timer when question changes
+  // This effect is now the single source of truth for controlling the timer
   useEffect(() => {
-    if (currentQuestion && !disabled && interviewStatus !== "completed") {
-      restart(new Date(Date.now() + (currentQuestion.time || 30) * 1000));
-    }
+    const shouldTimerRun =
+      currentQuestion &&
+      !currentQuestion.answer &&
+      !disabled &&
+      interviewStatus === "in-progress";
 
-    if (disabled || currentQuestion?.answer) {
+    if (shouldTimerRun) {
+      // Set the correct expiry time and start the timer
+      restart(new Date(Date.now() + (currentQuestion.time || 30) * 1000));
+    } else {
+      // If conditions are not met, ensure the timer is paused
       pause();
     }
-  }, [
-    currentQuestionIndex,
-    currentQuestion,
-    disabled,
-    interviewStatus,
-    restart,
-    pause,
-  ]);
+    // restart and pause are stable and don't need to be in the dependency array
+    // according to react-timer-hook documentation.
+  }, [currentQuestion, disabled, interviewStatus, restart, pause]);
 
   if (
     disabled ||

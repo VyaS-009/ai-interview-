@@ -42,39 +42,39 @@ const Header: React.FC = () => {
       interviewStatus === "in-progress");
 
   return (
-    <AntdHeader
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      <Title level={3} style={{ color: "#fff", margin: 0 }}>
+    <AntdHeader className="bg-white border-b border-gray-200 px-6 py-0 h-16 flex items-center justify-between shadow-sm">
+      <Title level={3} className="text-gray-900 font-bold m-0 text-xl">
         {process.env.NEXT_PUBLIC_APP_NAME}
       </Title>
-      <div>
+      <div className="flex items-center gap-3">
         {showStartOver && (
-          <Button
-            danger
+          <button
             onClick={handleStartOver}
-            style={{ marginRight: "8px" }}
+            className="px-5 py-2 bg-red-50 text-red-600 font-medium rounded-lg border border-red-200 hover:bg-red-100 hover:border-red-300 transition-all duration-200"
           >
             Start Over
-          </Button>
+          </button>
         )}
-        <Button
-          type={currentTab === "interviewee" ? "primary" : "default"}
+        <button
           onClick={() => handleTabChange("interviewee")}
-          style={{ marginRight: "8px" }}
+          className={`px-5 py-2 font-medium rounded-lg transition-all duration-200 ${
+            currentTab === "interviewee"
+              ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+          }`}
         >
           Interview
-        </Button>
-        <Button
-          type={currentTab === "interviewer" ? "primary" : "default"}
+        </button>
+        <button
           onClick={() => handleTabChange("interviewer")}
+          className={`px-5 py-2 font-medium rounded-lg transition-all duration-200 ${
+            currentTab === "interviewer"
+              ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+          }`}
         >
           Dashboard
-        </Button>
+        </button>
       </div>
     </AntdHeader>
   );

@@ -1,26 +1,339 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAFBFC;
+  --foreground: #1A202C;
+  --primary: #6366F1;
+  --primary-hover: #4F46E5;
+  --secondary: #10B981;
+  --border: #E2E8F0;
+  --surface: #FFFFFF;
+  --text-secondary: #4A5568;
 }
 
-@theme inline {
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --color-text-secondary: var(--text-secondary);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0F172A;
+    --foreground: #F1F5F9;
+    --border: #334155;
+    --surface: #1E293B;
+    --text-secondary: #94A3B8;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-variation-settings: 'opsz' 32;
+  overflow-x: hidden;
+}
+
+/* Animations */
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
+  50% { transform: translateY(-30px) scale(1.08) rotate(5deg); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.animate-gradient-slow {
+  background-size: 400% 400%;
+  animation: gradient 20s ease infinite;
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 10s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+/* Custom Scrollbar */
+body::-webkit-scrollbar, .scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+body::-webkit-scrollbar-track, .scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb, .scrollbar-custom::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #a78bfa, #c084fc);
+  border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb:hover, .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #9333ea, #a855f7);
+}
+
+/* Modern Tabs Styling */
+.modern-tabs .ant-tabs-nav {
+  margin: 0 !important; /* Use !important to override AntD inline styles */
+}
+
+.modern-tabs .ant-tabs-nav-wrap {
+  justify-content: center !important; /* Center the tab list container */
+  overflow: visible !important; /* Prevent overflow clipping */
+}
+
+.modern-tabs .ant-tabs-nav-list {
+  transform: none !important; /* Override AntD's inline transform for scrolling */
+}
+
+.modern-tabs .ant-tabs-nav-operations {
+  display: none !important; /* Hide the scroll arrows */
+}
+
+.modern-tabs .ant-tabs-tab {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.modern-tabs .ant-tabs-tab:hover {
+  color: #7c3aed;
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.modern-tabs .ant-tabs-tab-active {
+  color: #7c3aed !important;
+  background: rgba(139, 92, 246, 0.1) !important;
+}
+
+.modern-tabs .ant-tabs-ink-bar {
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+
+/* Upload Dragger Modern */
+.upload-dragger-modern .ant-upload-drag {
+  border: 2px dashed rgba(139, 92, 246, 0.3) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.03), rgba(168, 85, 247, 0.03)) !important;
+  transition: all 0.3s ease !important;
+}
+
+.upload-dragger-modern .ant-upload-drag:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(168, 85, 247, 0.08)) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+}
+
+.upload-dragger-modern .ant-upload-drag-icon {
+  margin-bottom: 0 !important;
+}
+
+/* Card Hover Effects */
+.ant-card:hover {
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Table Styling */
+.candidate-table .ant-table {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.candidate-table .ant-table-thead > tr > th {
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.candidate-table .ant-table-tbody > tr {
+  transition: all 0.2s ease;
+}
+
+.candidate-table .ant-table-tbody > tr:hover > td {
+  background: rgba(139, 92, 246, 0.05);
+}
+
+/* Descriptions Styling */
+.interview-descriptions .ant-descriptions-item-label,
+.candidate-descriptions .ant-descriptions-item-label {
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  font-weight: 600;
+}
+
+/* Modal Styling */
+.candidate-modal .ant-modal-content {
+  border-radius: 24px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.candidate-modal .ant-modal-header {
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.candidate-modal .ant-modal-body {
+  padding: 2rem;
+}
+
+.candidate-modal .ant-modal-footer {
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  padding: 1.25rem 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+/* Timeline Styling */
+.ant-timeline-item-tail {
+  border-left: 2px solid rgba(139, 92, 246, 0.2);
+}
+
+.ant-timeline-item-head {
+  background: transparent;
+}
+
+/* Input Focus States */
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1) !important;
+}
+
+/* Button Focus States */
+button:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+}
+
+/* Glassmorphism Effects */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #7c3aed, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer Effect for Loading */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection Styling */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: #1f2937;
+}
+
+::-moz-selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: #1f2937;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .animate-float,
+  .animate-float-delayed {
+    animation: none;
+  }
+  
+  .modern-tabs .ant-tabs-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
 }

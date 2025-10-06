@@ -1,6 +1,6 @@
 // src/lib/redux/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
+import { persistStore, persistReducer, createMigrate } from "redux-persist";
 import { combineReducers } from "redux";
 import interviewReducer from "./slices/interviewSlice";
 import uiReducer from "./slices/uiSlice";
@@ -24,11 +24,29 @@ const storage =
     ? createWebStorage("local")
     : createNoopStorage();
 
+const migrations = {
+  // The version number should be one higher than the previous version.
+  // Since the old state has no version, it's considered -1.
+  // This migration will run for any state that doesn't have a version >= 2.
+  2: (state: any) => {
+    // Migration to move `candidates` from root into `interview` slice
+    if (state && state.candidates && state.interview) {
+      const { candidates, ...rest } = state;
+      return {
+        ...rest,
+        interview: { ...state.interview, candidates: candidates },
+      };
+    }
+    return state;
+  },
+};
+
 const persistConfig = {
   key: "root",
   storage,
   whitelist: ["interview", "ui"],
-  version: 1,
+  version: 2, // Bump the version to apply the migration
+  migrate: createMigrate(migrations, { debug: process.env.NODE_ENV === 'development' }),
 };
 
 const rootReducer = combineReducers({

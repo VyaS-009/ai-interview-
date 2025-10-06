@@ -1,5 +1,5 @@
-import { Upload, Button, Card, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Upload, message } from "antd";
+import { CloudArrowUpIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useDispatch } from "react-redux";
 import { setCandidateInfo } from "@/lib/redux/slices/interviewSlice";
 import { useUploadResumeMutation } from "@/lib/api/interviewApi";
@@ -37,15 +37,40 @@ const ResumeUpload: React.FC = () => {
   };
 
   return (
-    <Card title="Upload Your Resume">
-      <Dragger {...uploadProps} disabled={isLoading}>
-        <p className="ant-upload-drag-icon">
-          <UploadOutlined />
-        </p>
-        <p className="ant-upload-text">Click or drag file to upload</p>
-        <p className="ant-upload-hint">Support for PDF, DOCX (max 2MB)</p>
-      </Dragger>
-    </Card>
+    <div className="max-w-3xl mx-auto">
+      <div className="backdrop-blur-xl  rounded-3xl border border-white/50 shadow-2xl shadow-purple-800/10 overflow-hidden">
+        <div className="p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Upload Your Resume</h2>
+            <p className="text-gray-600">Start your interview journey by sharing your professional profile</p>
+          </div>
+          
+          <Dragger 
+            {...uploadProps} 
+            disabled={isLoading}
+            className="upload-dragger-modern"
+          >
+            <div className="py-16">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 animate-float">
+                <CloudArrowUpIcon className="w-10 h-10 text-white" />
+              </div>
+              
+              <p className="text-xl font-semibold text-gray-800 mb-2">
+                Drop your resume here
+              </p>
+              <p className="text-base text-gray-600 mb-4">
+                or click to browse files
+              </p>
+              
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 text-violet-700 text-sm font-medium">
+                <DocumentTextIcon className="w-4 h-4" />
+                <span>PDF, DOCX (max 2MB)</span>
+              </div>
+            </div>
+          </Dragger>
+        </div>
+      </div>
+    </div>
   );
 };
 

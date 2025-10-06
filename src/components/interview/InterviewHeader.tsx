@@ -3,7 +3,7 @@
 import { Typography, Spin, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useGenerateQuestionMutation } from "@/lib/api/interviewApi";
 import { addQuestion } from "@/lib/redux/slices/interviewSlice";
 import { QUESTION_SEQUENCE, TIMER_SEQUENCE } from "@/utils/constants";
@@ -19,16 +19,28 @@ const InterviewHeader: React.FC = () => {
     useGenerateQuestionMutation();
 
   const currentQuestion = questionsAndAnswers[currentQuestionIndex];
+  const fetchingRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // A more robust check to prevent re-fetching if a question already exists at the target index.
+    const questionExists = !!questionsAndAnswers[currentQuestionIndex];
+
+    // Use a ref to ensure we only fetch once per question index.
+    // This is immune to rapid re-renders causing race conditions.
     if (
       currentQuestionIndex < QUESTION_SEQUENCE.length &&
-      !questionsAndAnswers[currentQuestionIndex] &&
-      !isQuestionLoading
+      !questionExists &&
+      !isQuestionLoading &&
+      fetchingRef.current !== currentQuestionIndex
     ) {
-      generateQuestion({ difficulty: QUESTION_SEQUENCE[currentQuestionIndex] })
-        .unwrap()
-        .then((response) => {
+      // Set the lock
+      fetchingRef.current = currentQuestionIndex;
+
+      const fetchQuestion = async () => {
+        try {
+          const response = await generateQuestion({
+            difficulty: QUESTION_SEQUENCE[currentQuestionIndex],
+          }).unwrap();
           dispatch(
             addQuestion({
               question: response.question,
@@ -36,15 +48,18 @@ const InterviewHeader: React.FC = () => {
               time: TIMER_SEQUENCE[currentQuestionIndex],
             })
           );
-        })
-        .catch(() => message.error("Failed to fetch question."));
+        } catch {
+          message.error("Failed to fetch question.");
+        }
+      };
+      fetchQuestion();
     }
   }, [
     currentQuestionIndex,
     questionsAndAnswers,
+    isQuestionLoading,
     generateQuestion,
     dispatch,
-    isQuestionLoading,
   ]);
 
   if (isQuestionLoading && !currentQuestion) {
