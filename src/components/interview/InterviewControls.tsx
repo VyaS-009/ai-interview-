@@ -1,7 +1,6 @@
 // src/components/interview/InterviewControls.tsx
 "use client";
 
-import { Statistic } from "antd";
 import { useTimer } from "react-timer-hook";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -26,7 +25,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
     onTimeoutRef.current = onTimeout;
   }, [onTimeout]);
 
-  const { seconds, minutes, restart, pause } = useTimer({
+  const { restart, pause } = useTimer({
     // The expiryTimestamp will be set dynamically by the effect below
     expiryTimestamp: new Date(),
     onExpire: () => {
@@ -55,25 +54,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
     // according to react-timer-hook documentation.
   }, [currentQuestion, disabled, interviewStatus, restart, pause]);
 
-  if (
-    disabled ||
-    interviewStatus === "completed" ||
-    !currentQuestion ||
-    currentQuestion.answer
-  ) {
-    return null;
-  }
-
-  return (
-    <div style={{ marginTop: "16px" }}>
-      <Statistic.Timer
-        type="countdown"
-        title="Time Remaining"
-        value={Date.now() + (minutes * 60 + seconds) * 1000}
-        format="mm:ss"
-      />
-    </div>
-  );
+  return null;
 };
 
 export default InterviewControls;

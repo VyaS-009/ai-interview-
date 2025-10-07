@@ -129,7 +129,7 @@ export default function Home() {
           {(interviewStatus === "collecting-info" ||
             interviewStatus === "in-progress" ||
             interviewStatus === "completed") && (
-            <div className="max-w-5xl mx-auto px-4 py-8 pt-0">
+            <div className="px-4 py-8 pt-0">
               {interviewStatus === "collecting-info" && <InfoCollection />}
               {interviewStatus === "in-progress" && <InterviewChat />}
               {interviewStatus === "completed" && <CompletionScreen />}

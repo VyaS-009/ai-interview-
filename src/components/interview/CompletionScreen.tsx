@@ -50,23 +50,25 @@ const CompletionScreen: React.FC = () => {
             Congratulations on completing your AI interview
           </p>
           
-          <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-violet-100 to-purple-100 rounded-2xl mb-8">
-            <SparklesIcon className="w-8 h-8 text-violet-600" />
-            <div className="text-left">
-              <p className="text-sm text-gray-600 font-medium">Your Final Score</p>
-              <p className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                {finalScore || "N/A"}/10
-              </p>
+          <div className="flex flex-col items-center gap-6 mb-8">
+            <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-violet-100 to-purple-100 rounded-2xl">
+              <SparklesIcon className="w-8 h-8 text-violet-600" />
+              <div className="text-left">
+                <p className="text-sm text-gray-600 font-medium">Your Final Score</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                  {finalScore || "N/A"}/10
+                </p>
+              </div>
             </div>
+            
+            <button
+              onClick={handleRestart}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 active:scale-95"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+              <span>Start New Interview</span>
+            </button>
           </div>
-          
-          <button
-            onClick={handleRestart}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 active:scale-95"
-          >
-            <ArrowPathIcon className="w-5 h-5" />
-            <span>Start New Interview</span>
-          </button>
         </div>
 
         {/* Summary Card */}

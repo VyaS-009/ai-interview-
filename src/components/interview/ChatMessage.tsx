@@ -29,9 +29,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isAI }) => {
             : "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-purple-500/30"
         }`}
       >
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap m-0">
+        <div className="text-[15px] leading-relaxed whitespace-pre-wrap m-0">
           {message}
-        </p>
+        </div>
       </div>
       
       {!isAI && (

@@ -4,18 +4,21 @@
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/lib/redux/store";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { Spin } from "antd";
 
-const ClientReduxWrapper: React.FC<{ children: React.ReactNode }> = ({
+export default function ClientReduxWrapper({
   children,
-}) => {
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <Provider store={store}>
-      <PersistGate loading={<LoadingSpinner />} persistor={persistor}>
+      <PersistGate
+        loading={<div className="flex h-screen w-full items-center justify-center"><Spin size="large" /></div>}
+        persistor={persistor}
+      >
         {children}
       </PersistGate>
     </Provider>
   );
-};
-
-export default ClientReduxWrapper;
+}

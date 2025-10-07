@@ -21,6 +21,7 @@ import ProgressIndicator from "./ProgressIndicator";
 import InterviewHeader from "./InterviewHeader";
 import { SparklesIcon} from "@heroicons/react/24/outline";
 import ReactMarkdown from "react-markdown";
+import CircularTimer from "./TimerComponent"; 
 
 const InterviewChat: React.FC = () => {
   const dispatch = useDispatch();
@@ -32,7 +33,6 @@ const InterviewChat: React.FC = () => {
   const [evaluateAnswer] = useEvaluateAnswerMutation();
   const [generateSummary, { isLoading: isSummaryLoading }] = useGenerateSummaryMutation();
   const [, { isLoading: isEvaluatingAnswer }] = useEvaluateAnswerMutation();
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     console.log("InterviewChat State:", {
@@ -41,6 +41,9 @@ const InterviewChat: React.FC = () => {
       interviewStatus,
     });
   }, [questionsAndAnswers, currentQuestionIndex, interviewStatus]);
+
+  const currentQuestion = questionsAndAnswers[currentQuestionIndex];
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (listRef.current) {
@@ -62,7 +65,6 @@ const InterviewChat: React.FC = () => {
     interviewStatus === "completed";
 
   const handleAnswerSubmit = async (answer: string) => {
-    const currentQuestion = questionsAndAnswers[currentQuestionIndex];
     if (isSubmitting || !currentQuestion) return;
 
     setIsSubmitting(true);
@@ -130,10 +132,10 @@ const InterviewChat: React.FC = () => {
       <div className="fixed top-20 left-10 w-96 h-96 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-3xl animate-float" />
       <div className="fixed bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl animate-float-delayed" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
-        {/* Header Card */}
-        <div className="mb-6 backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-6">
-          <div className="flex items-center justify-between mb-4">
+      <div className="relative z-10 flex h-[calc(110vh-100px)] w-full max-w-full gap-6 px-4 py-8">
+        {/* Left Sidebar */}
+        <div className="flex w-[30%] flex-col gap-6">
+          <div className="flex-shrink-0 backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
                 <SparklesIcon className="w-6 h-6 text-white" />
@@ -145,21 +147,35 @@ const InterviewChat: React.FC = () => {
                 <p className="text-sm text-gray-600">Let`&apos;`s showcase your skills</p>
               </div>
             </div>
+          </div>
+          <div className="flex-grow backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-6 flex flex-col justify-between">
+            <div>
+              <ProgressIndicator />
+              <InterviewHeader />
+            </div>
+            <div className="my-auto flex flex-col items-center">
+              {currentQuestion && (
+                <CircularTimer
+                  key={currentQuestionIndex} // VERY IMPORTANT: Resets timer on new question
+                  duration={currentQuestion.time}
+                  onTimeout={() => handleAnswerSubmit("I ran out of time.")}
+                  disabled={isChatDisabled}
+                  size={220}
+                />
+              )}
+            </div>
             <InterviewControls
               disabled={isChatDisabled}
               onTimeout={() => handleAnswerSubmit("I ran out of time.")}
             />
           </div>
-          <ProgressIndicator />
-          <InterviewHeader />
         </div>
 
-        {/* Chat Container */}
-        <div className="backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 overflow-hidden">
-          {/* Messages Area */}
+        {/* Right Chat Area */}
+        <div className="flex w-[70%] flex-col backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 overflow-hidden">
           <div
             ref={listRef}
-            className="h-[500px] overflow-y-auto px-6 py-8 space-y-4 scrollbar-custom"
+            className="flex-grow overflow-y-auto px-6 py-8 space-y-4 scrollbar-custom"
             style={{ scrollBehavior: "smooth" }}
           >
             {questionsAndAnswers.length === 0 ? (
@@ -190,11 +206,11 @@ const InterviewChat: React.FC = () => {
               />
             )}
           </div>
-
-          {/* Input Area */}
-          <div className="border-t border-white/50 bg-white/20 backdrop-blur-xl p-6">
-            <ChatInput onSubmit={handleAnswerSubmit} disabled={isChatDisabled} />
-          </div>
+          <div className="px-4 py-3">
+  <div className="max-w-4xl mx-auto">
+    <ChatInput onSubmit={handleAnswerSubmit} disabled={isChatDisabled} />
+  </div>
+</div>
         </div>
       </div>
     </div>
