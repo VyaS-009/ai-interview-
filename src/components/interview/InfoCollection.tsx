@@ -1,16 +1,23 @@
-import { Form, Input, Button, message } from "antd";
+import { Form, Input, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
-import { updateCandidateInfo, setInterviewStatus } from "@/lib/redux/slices/interviewSlice";
+import { setCandidateInfo, setInterviewStatus } from "@/lib/redux/slices/interviewSlice";
 import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
+
+interface InfoFormValues {
+  name: string;
+  email: string;
+  phone: string;
+  position?: string;
+}
 
 const InfoCollection: React.FC = () => {
   const dispatch = useDispatch();
   const candidateInfo = useSelector((state: RootState) => state.interview.candidateInfo);
   const [form] = Form.useForm();
 
-  const handleSubmit = (values: any) => {
-    dispatch(updateCandidateInfo(values));
+  const handleSubmit = (values: InfoFormValues) => {
+    dispatch(setCandidateInfo(values));
     dispatch(setInterviewStatus("in-progress"));
     message.success("Information saved! Starting your interview...");
   };

@@ -3,8 +3,16 @@ import { CloudArrowUpIcon, DocumentTextIcon } from "@heroicons/react/24/outline"
 import { useDispatch } from "react-redux";
 import { setCandidateInfo } from "@/lib/redux/slices/interviewSlice";
 import { useUploadResumeMutation } from "@/lib/api/interviewApi";
+import { RcFile } from "antd/es/upload";
+import { CandidateInfo } from "@/types/interview";
 
 const { Dragger } = Upload;
+
+interface CustomRequestOptions {
+  file: RcFile | string | Blob;
+  onSuccess?: (body: CandidateInfo, xhr?: XMLHttpRequest) => void;
+  onError?: (error: Error) => void;
+}
 
 const ResumeUpload: React.FC = () => {
   const dispatch = useDispatch();
@@ -21,17 +29,21 @@ const ResumeUpload: React.FC = () => {
       }
       return true;
     },
-    customRequest: async ({ file, onSuccess, onError }: any) => {
+    customRequest: async ({ file, onSuccess, onError }: CustomRequestOptions) => {
       try {
         const formData = new FormData();
         formData.append("file", file);
         const response = await uploadResume(formData).unwrap();
         dispatch(setCandidateInfo(response));
-        onSuccess(response);
+        onSuccess?.(response);
         message.success("Resume uploaded successfully!");
       } catch (error) {
-        onError(error);
-        message.error("Failed to upload resume.");
+        const err = error instanceof Error ? error : new Error("An unknown error occurred");
+        onError?.(err);
+        message.error(
+          (err as { data?: { error?: string } })?.data?.error ||
+          "Failed to upload resume."
+        );
       }
     },
   };

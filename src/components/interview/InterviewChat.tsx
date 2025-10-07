@@ -19,7 +19,8 @@ import ChatInput from "./ChatInput";
 import InterviewControls from "./InterviewControls";
 import ProgressIndicator from "./ProgressIndicator";
 import InterviewHeader from "./InterviewHeader";
-import { SparklesIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon} from "@heroicons/react/24/outline";
+import ReactMarkdown from "react-markdown";
 
 const InterviewChat: React.FC = () => {
   const dispatch = useDispatch();
@@ -141,7 +142,7 @@ const InterviewChat: React.FC = () => {
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
                   AI Interview
                 </h1>
-                <p className="text-sm text-gray-600">Let's showcase your skills</p>
+                <p className="text-sm text-gray-600">Let`&apos;`s showcase your skills</p>
               </div>
             </div>
             <InterviewControls
@@ -176,7 +177,9 @@ const InterviewChat: React.FC = () => {
                 dataSource={questionsAndAnswers}
                 renderItem={(item, index) => (
                   <div key={index} className="space-y-4">
-                    <ChatMessage message={item.question} isAI={true} />
+                    <div className="prose prose-sm max-w-none">
+                      <ChatMessage message={<ReactMarkdown>{item.question}</ReactMarkdown>} isAI={true} />
+                    </div>
                     {index === currentQuestionIndex && provisionalAnswer ? (
                       <ChatMessage message={provisionalAnswer} isAI={false} />
                     ) : item.answer && (

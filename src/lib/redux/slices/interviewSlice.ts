@@ -1,7 +1,7 @@
 // src/lib/redux/slices/interviewSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { InterviewState } from "@/types/interview";
+import { InterviewState, CandidateInfo } from "@/types/interview";
 
 const initialState: InterviewState = {
   candidateId: null,
@@ -21,10 +21,10 @@ const interviewSlice = createSlice({
   reducers: {
     setCandidateInfo(
       state,
-      action: PayloadAction<InterviewState["candidateInfo"]>
+      action: PayloadAction<CandidateInfo>
     ) {
       state.candidateId = state.candidateId || uuidv4();
-      state.candidateInfo = action.payload;
+      state.candidateInfo = action.payload as InterviewState['candidateInfo'];
       state.missingInfo = ["name", "email", "phone"].filter(
         (field) => !action.payload?.[field as keyof typeof action.payload]
       );

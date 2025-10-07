@@ -1,8 +1,9 @@
-import { Avatar } from "antd";
+// import { Avatar } from "antd";
 import { RobotOutlined, UserOutlined } from "@ant-design/icons";
+import React from "react";
 
 interface ChatMessageProps {
-  message: string;
+  message: React.ReactNode;
   isAI: boolean;
 }
 

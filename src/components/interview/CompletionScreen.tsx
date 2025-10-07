@@ -1,8 +1,9 @@
-import { Descriptions, List } from "antd";
+import { Descriptions } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { resetInterview } from "@/lib/redux/slices/interviewSlice";
 import { CheckCircleIcon, TrophyIcon, SparklesIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
+import ReactMarkdown from "react-markdown";
 
 const CompletionScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -93,7 +94,9 @@ const CompletionScreen: React.FC = () => {
               </span>
             </Descriptions.Item>
             <Descriptions.Item label={<span className="font-semibold text-gray-700">AI Summary</span>} span={2}>
-              <p className="text-gray-700 leading-relaxed">{finalSummary || "N/A"}</p>
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown>{finalSummary || "N/A"}</ReactMarkdown>
+              </div>
             </Descriptions.Item>
           </Descriptions>
         </div>
@@ -111,7 +114,9 @@ const CompletionScreen: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 space-y-3">
-                    <h4 className="text-lg font-semibold text-gray-900">{item.question}</h4>
+                    <div className="prose prose-sm max-w-none text-lg font-semibold text-gray-900">
+                      <ReactMarkdown>{item.question}</ReactMarkdown>
+                    </div>
                     
                     <div className="bg-gray-50/80 rounded-xl p-4">
                       <p className="text-sm font-medium text-gray-600 mb-1">Your Answer:</p>

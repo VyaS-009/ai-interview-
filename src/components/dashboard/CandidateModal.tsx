@@ -1,6 +1,7 @@
 import { Modal, Descriptions, Timeline } from "antd";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import ReactMarkdown from "react-markdown";
 import { ClockCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 
 interface CandidateModalProps {
@@ -77,7 +78,9 @@ const CandidateModal: React.FC<CandidateModalProps> = ({
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm font-semibold text-indigo-600">Question {index + 1}:</span>
-                      <p className="text-gray-900 mt-1 leading-relaxed font-medium">{item.q}</p>
+                      <div className="prose prose-sm max-w-none text-gray-900 mt-1 leading-relaxed font-medium">
+                        <ReactMarkdown>{item.q}</ReactMarkdown>
+                      </div>
                     </div>
                     <div>
                       <span className="text-sm font-semibold text-gray-700">Answer:</span>

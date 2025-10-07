@@ -1,14 +1,23 @@
 // src/components/dashboard/CandidateTable.tsx
 "use client";
 
-import { Table, Input } from "antd";
+import { Table, Input, TableProps } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import CandidateModal from "./CandidateModal";
 import { MagnifyingGlassIcon, EyeIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { Candidate } from "@/types/interview";
 
-const { Search } = Input;
+// interface Candidate {
+//   id: string;
+//   name?: string;
+//   email?: string;
+//   finalScore?: number;
+//   completedAt?: string;
+// }
+
+// const { Search } = Input;
 
 const CandidateTable: React.FC = () => {
   const candidates =
@@ -24,25 +33,25 @@ const CandidateTable: React.FC = () => {
       candidate.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const columns = [
+  const columns: TableProps<Candidate>['columns'] = [
     {
       title: <span className="font-semibold text-gray-700">Name</span>,
       dataIndex: "name",
       key: "name",
-      sorter: (a: any, b: any) => (a.name || "").localeCompare(b.name || ""),
+      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
       render: (text: string) => <span className="font-medium text-gray-900">{text || "N/A"}</span>,
     },
     {
       title: <span className="font-semibold text-gray-700">Email</span>,
       dataIndex: "email",
       key: "email",
-      render: (text: string) => <span className="text-gray-600">{text || "N/A"}</span>,
+      render: (text?: string) => <span className="text-gray-600">{text || "N/A"}</span>,
     },
     {
       title: <span className="font-semibold text-gray-700">Score</span>,
       dataIndex: "finalScore",
       key: "finalScore",
-      sorter: (a: any, b: any) => (a.finalScore || 0) - (b.finalScore || 0),
+      sorter: (a, b) => (a.finalScore || 0) - (b.finalScore || 0),
       render: (score: number) => (
         <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700">
           {score || "N/A"}
@@ -62,7 +71,7 @@ const CandidateTable: React.FC = () => {
     {
       title: <span className="font-semibold text-gray-700">Actions</span>,
       key: "actions",
-      render: (_: any, record: any) => (
+      render: (_, record) => (
         <button
           onClick={() => setSelectedCandidate(record.id)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border-2 border-gray-200/50 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50 hover:border-violet-300 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md"
