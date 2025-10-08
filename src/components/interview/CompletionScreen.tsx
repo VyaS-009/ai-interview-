@@ -56,7 +56,7 @@ const CompletionScreen: React.FC = () => {
               <div className="text-left">
                 <p className="text-sm text-gray-600 font-medium">Your Final Score</p>
                 <p className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                  {finalScore || "N/A"}/10
+                  {finalScore || "N/A"}/100
                 </p>
               </div>
             </div>
@@ -92,7 +92,7 @@ const CompletionScreen: React.FC = () => {
             </Descriptions.Item>
             <Descriptions.Item label={<span className="font-semibold text-gray-700">Final Score</span>}>
               <span className="inline-flex items-center px-4 py-1.5 rounded-full text-base font-bold bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700">
-                {finalScore || "N/A"}/10
+                {finalScore || "N/A"}/100
               </span>
             </Descriptions.Item>
             <Descriptions.Item label={<span className="font-semibold text-gray-700">AI Summary</span>} span={2}>
@@ -131,7 +131,7 @@ const CompletionScreen: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-600">Score:</span>
                         <span className="px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700">
-                          {item.score ?? "N/A"}/10
+                          {item.score ?? "N/A"}/100
                         </span>
                       </div>
                       <span className="text-gray-300">•</span>
