@@ -218,3 +218,5 @@ const InterviewChat: React.FC = () => {
 };
 
 export default InterviewChat;
+
+// src/components/interview/InterviewChat.tsx
