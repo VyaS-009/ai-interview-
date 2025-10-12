@@ -1,10 +1,11 @@
-import { Upload, message } from "antd";
+import { App, Upload, message } from "antd";
 import { CloudArrowUpIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
-import { useDispatch } from "react-redux";
-import { setCandidateInfo } from "@/lib/redux/slices/interviewSlice";
-import { useUploadResumeMutation } from "@/lib/api/interviewApi";
+import { useDispatch, useSelector } from "react-redux";
+import { setCandidateInfo} from "@/lib/redux/slices/interviewSlice";
+import { useUploadResumeMutation} from "@/lib/api/interviewApi";
 import { RcFile } from "antd/es/upload";
 import { CandidateInfo } from "@/types/interview";
+import { RootState } from "@/lib/redux/store";
 
 const { Dragger } = Upload;
 
@@ -14,9 +15,15 @@ interface CustomRequestOptions {
   onError?: (error: Error) => void;
 }
 
-const ResumeUpload: React.FC = () => {
+interface ResumeUploadProps {
+  onUploadSuccess?: () => void;
+}
+
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUploadSuccess }) => {
   const dispatch = useDispatch();
+  const { message: messageApi } = App.useApp();
   const [uploadResume, { isLoading }] = useUploadResumeMutation();
+  const { sessionId } = useSelector((state: RootState) => state.interview);
 
   const uploadProps = {
     name: "file",
@@ -31,16 +38,21 @@ const ResumeUpload: React.FC = () => {
     },
     customRequest: async ({ file, onSuccess, onError }: CustomRequestOptions) => {
       try {
+        if (!sessionId) {
+          throw new Error("Session not started. Please start a new interview first.");
+        }
         const formData = new FormData();
         formData.append("file", file);
         const response = await uploadResume(formData).unwrap();
         dispatch(setCandidateInfo(response));
-        onSuccess?.(response);
-        message.success("Resume uploaded successfully!");
+        // Call the success callback to close the modal
+        onUploadSuccess?.();
+        onSuccess?.(response); 
+        messageApi.success("Resume uploaded successfully!");
       } catch (error) {
         const err = error instanceof Error ? error : new Error("An unknown error occurred");
-        onError?.(err);
-        message.error(
+        onError?.(err); 
+        messageApi.error(
           (err as { data?: { error?: string } })?.data?.error ||
           "Failed to upload resume."
         );

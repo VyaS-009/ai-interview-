@@ -2,23 +2,17 @@ import { Form, Input, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { setCandidateInfo, setInterviewStatus } from "@/lib/redux/slices/interviewSlice";
+import { CandidateInfo } from "@/types/interview";
 import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
-
-interface InfoFormValues {
-  name: string;
-  email: string;
-  phone: string;
-  position?: string;
-}
 
 const InfoCollection: React.FC = () => {
   const dispatch = useDispatch();
   const candidateInfo = useSelector((state: RootState) => state.interview.candidateInfo);
   const [form] = Form.useForm();
 
-  const handleSubmit = (values: InfoFormValues) => {
+  const handleSubmit = (values: CandidateInfo) => {
     dispatch(setCandidateInfo(values));
-    dispatch(setInterviewStatus("in-progress"));
+    dispatch(setInterviewStatus({ status: "in-progress" }));
     message.success("Information saved! Starting your interview...");
   };
 
@@ -105,7 +99,7 @@ const InfoCollection: React.FC = () => {
             </Form.Item>
 
             <Form.Item
-              name="position"
+              name="jobRole"
               label={<span className="text-gray-700 font-semibold">Position Applied For</span>}
             >
               <div className="relative">

@@ -26,7 +26,10 @@ const storage =
     ? createWebStorage("local")
     : createNoopStorage();
 
+import authReducer from "./slices/authSlice";
+
 const rootReducer = combineReducers({
+  auth: authReducer,
   interview: interviewReducer,
   ui: uiReducer,
   [interviewApi.reducerPath]: interviewApi.reducer,
@@ -67,7 +70,7 @@ const migrations = {
 const persistConfig: PersistConfig<RootState> = {
   key: "root",
   storage,
-  whitelist: ["interview", "ui"],
+  whitelist: ["auth", "interview", "ui"],
   version: 2, // Bump the version to apply the migration
   migrate: createMigrate(migrations, { debug: process.env.NODE_ENV === 'development' }),
 };

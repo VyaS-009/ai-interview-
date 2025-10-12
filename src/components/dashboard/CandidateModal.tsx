@@ -1,21 +1,23 @@
 import { Modal, Descriptions, Timeline } from "antd";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/redux/store";
 import ReactMarkdown from "react-markdown";
-import { ClockCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  ClockIcon as ClockIconOutline, // Renaming to avoid conflict if you use outline version
+  CheckCircleIcon,
+  CheckBadgeIcon,
+  ExclamationTriangleIcon,
+  AcademicCapIcon,
+} from "@heroicons/react/24/solid";
+import { Candidate } from "@/types/interview";
 
 interface CandidateModalProps {
-  candidateId: string;
+  candidate: Candidate | null;
   onClose: () => void;
 }
 
 const CandidateModal: React.FC<CandidateModalProps> = ({
-  candidateId,
+  candidate,
   onClose,
 }) => {
-  const candidate = useSelector((state: RootState) =>
-    state.interview.candidates.find((c) => c.id === candidateId)
-  );
 
   if (!candidate) return null;
 
@@ -39,7 +41,7 @@ const CandidateModal: React.FC<CandidateModalProps> = ({
       width={900}
       className="candidate-modal "
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4 scrollbar-custom">
         <Descriptions 
           bordered 
           column={2}
@@ -60,19 +62,19 @@ const CandidateModal: React.FC<CandidateModalProps> = ({
             </span>
           </Descriptions.Item>
           <Descriptions.Item label={<span className="font-medium text-gray-700">Summary</span>} span={2}>
-            <p className="text-gray-700 leading-relaxed m-0">{candidate.finalSummary || "N/A"}</p>
+            <p className="text-gray-700 leading-relaxed m-0">{candidate.finalResult?.overallSummary || candidate.finalSummary || "N/A"}</p>
           </Descriptions.Item>
         </Descriptions>
 
         <div>
           <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ClockCircleOutlined className="text-indigo-600" />
+            <ClockIconOutline className="w-6 h-6 text-indigo-600" />
             Interview Timeline
           </h4>
           <Timeline
             items={candidate.chatHistory.map((item, index) => ({
               key: index,
-              dot: <CheckCircleOutlined className="text-emerald-600" />,
+              dot: <CheckCircleIcon className="w-5 h-5 text-emerald-600" />,
               children: (
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3">
                   <div className="space-y-3">
@@ -88,14 +90,26 @@ const CandidateModal: React.FC<CandidateModalProps> = ({
                         {item.a || <span className="italic text-gray-500">No answer provided</span>}
                       </p>
                     </div>
-                    <div className="flex items-start gap-2 pt-2 border-t border-gray-200">
-                      <span className="text-sm font-semibold text-gray-700">Score:</span>
-                      <span className="text-sm font-bold text-indigo-600">{item.score ?? "N/A"}</span>
-                      <span className="text-sm text-gray-400">—</span>
-                      <span className="text-sm text-gray-600 italic flex-1">
-                        {item.justification ?? "No justification."}
-                      </span>
-                    </div>
+                    {item.evaluation && (
+                      <div className="space-y-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-semibold text-gray-700">Score:</span>
+                          <span className="text-sm font-bold text-indigo-600">{item.evaluation.score ?? "N/A"}</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-green-700 flex items-center gap-2 text-sm"><CheckBadgeIcon className="w-4 h-4" />What Went Well</h4>
+                          <p className="text-xs text-gray-600 pl-6">{item.evaluation.analysis.positive_feedback}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-amber-700 flex items-center gap-2 text-sm"><ExclamationTriangleIcon className="w-4 h-4" />Areas for Improvement</h4>
+                          <p className="text-xs text-gray-600 pl-6">{item.evaluation.analysis.areas_for_improvement}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-blue-700 flex items-center gap-2 text-sm"><AcademicCapIcon className="w-4 h-4" />Suggested Approach</h4>
+                          <p className="text-xs text-gray-600 pl-6">{item.evaluation.analysis.suggested_answer}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ),

@@ -1,216 +1,215 @@
 // src/components/interview/InterviewChat.tsx
 "use client";
 
-import { List, message } from "antd";
+import { message, Spin } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
 import {
-  addAnswer,
   setInterviewStatus,
   setFinalResult,
+  setAllQuestions,
+  setAllEvaluations,
+  submitAnswer,
 } from "@/lib/redux/slices/interviewSlice";
 import {
-  useEvaluateAnswerMutation,
   useGenerateSummaryMutation,
+  useSaveCompletedInterviewMutation,
+  useGenerateAllQuestionsMutation,
+  useEvaluateAllAnswersMutation,
 } from "@/lib/api/interviewApi";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-import InterviewControls from "./InterviewControls";
-import ProgressIndicator from "./ProgressIndicator";
-import InterviewHeader from "./InterviewHeader";
-import { SparklesIcon} from "@heroicons/react/24/outline";
+import QuestionPanel from "./QuestionPanel";
+// import InterviewStepper from "./InterviewStepper";
 import ReactMarkdown from "react-markdown";
-import CircularTimer from "./TimerComponent"; 
 
 const InterviewChat: React.FC = () => {
   const dispatch = useDispatch();
   const {
+    candidateInfo,
     questionsAndAnswers,
     currentQuestionIndex,
     interviewStatus,
+    // sessionId, // Get the session ID from the store
+  
   } = useSelector((state: RootState) => state.interview);
-  const [evaluateAnswer] = useEvaluateAnswerMutation();
-  const [generateSummary, { isLoading: isSummaryLoading }] = useGenerateSummaryMutation();
-  const [, { isLoading: isEvaluatingAnswer }] = useEvaluateAnswerMutation();
+  const [evaluateAllAnswers] = useEvaluateAllAnswersMutation();
+  const [generateSummary] = useGenerateSummaryMutation();
+  const [generateAllQuestions] = useGenerateAllQuestionsMutation();
+  const [saveCompletedInterview] = useSaveCompletedInterviewMutation();
+
+  const [isProcessing, setIsProcessing] = useState(true);
+
+  const hasFetchedQuestions = useRef(false);
 
   useEffect(() => {
-    console.log("InterviewChat State:", {
-      questionsAndAnswers,
-      currentQuestionIndex,
-      interviewStatus,
-    });
-  }, [questionsAndAnswers, currentQuestionIndex, interviewStatus]);
+    // If questions are already loaded (e.g., from a page refresh), just stop loading.
+    if (questionsAndAnswers.length > 0) {
+      setIsProcessing(false);
+      return;
+    }
 
-  const currentQuestion = questionsAndAnswers[currentQuestionIndex];
+    // Otherwise, fetch all questions when the component mounts for an "in-progress" interview
+    if (
+      candidateInfo &&
+      interviewStatus === "in-progress" &&
+      !hasFetchedQuestions.current
+    ) {
+      const fetchAllQuestions = async () => {
+        hasFetchedQuestions.current = true; // Mark as fetched immediately
+        setIsProcessing(true);
+        try {
+          // SINGLE request to get all questions
+          const generatedQuestions = await generateAllQuestions({ profile: candidateInfo }).unwrap();
+          const allQuestions = generatedQuestions.map((q: { question: string; difficulty: string }) => ({
+            question: q.question,
+            difficulty: q.difficulty,
+            answer: null,
+            evaluation: null,
+          }));
+          dispatch(setAllQuestions(allQuestions));
+        } catch (err) {
+          console.error("Failed to generate initial questions:", err);
+          message.error("Could not start the interview. Please try again.");
+          hasFetchedQuestions.current = false; // Allow retry on error
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      fetchAllQuestions();
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interviewStatus, candidateInfo, questionsAndAnswers.length, generateAllQuestions]);
+
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
+    // Scroll to the latest message
+    const lastAnsweredIndex = questionsAndAnswers.findIndex(qa => qa.answer === null);
+    const scrollIndex = lastAnsweredIndex === -1 ? questionsAndAnswers.length - 1 : Math.max(0, lastAnsweredIndex);
+    const targetElement = document.getElementById(`answer-container-${scrollIndex}`);
+
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [questionsAndAnswers]);
+  }, [questionsAndAnswers, currentQuestionIndex]);
 
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [provisionalAnswer, setProvisionalAnswer] = useState<string | null>(null);
+  const isLastQuestion = useMemo(() => {
+    return questionsAndAnswers.length > 0 && currentQuestionIndex === questionsAndAnswers.length - 1;
+  }, [questionsAndAnswers, currentQuestionIndex]);
 
-  const isChatDisabled =
-    isEvaluatingAnswer ||
-    isSummaryLoading ||
-    isEvaluating ||
-    isSubmitting ||
-    !questionsAndAnswers[currentQuestionIndex] ||
-    currentQuestionIndex >= 6 ||
-    interviewStatus === "completed";
+  const isChatDisabled = isProcessing || interviewStatus === "completed";
 
-  const handleAnswerSubmit = async (answer: string) => {
-    if (isSubmitting || !currentQuestion) return;
+  const handleAnswerSubmit = (answer: string) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    dispatch(submitAnswer({ answer }));
 
-    setIsSubmitting(true);
-    setProvisionalAnswer(answer);
-    setIsEvaluating(true);
+    // If that was the last question, trigger final evaluation.
+    // We use a timeout to allow the Redux state to update before we read it.
+    if (isLastQuestion) {
+      setTimeout(async () => {
+        // The state is now updated with the final answer.
+        const finalState = (await import("@/lib/redux/store")).store.getState().interview;
 
-    if (currentQuestion) {
-      try {
-        const response = await evaluateAnswer({
-          question: currentQuestion.question,
-          answer,
-          difficulty: currentQuestion.difficulty,
-        }).unwrap();
-        dispatch(
-          addAnswer({
-            answer,
-            score: response.score,
-            justification: response.justification,
-          })
-        );
-
-        if (currentQuestionIndex >= 5) {
-          try {
-            const summaryResponse = await generateSummary({
-              chatHistory: [
-                ...questionsAndAnswers.slice(0, currentQuestionIndex),
-                { ...currentQuestion, answer },
-              ].map((qa) => ({ q: qa.question, a: qa.answer || "" })),
-            }).unwrap();
-            console.log("Summary Response:", summaryResponse);
-            dispatch(
-              setFinalResult({
-                finalScore: summaryResponse.finalScore,
-                finalSummary: summaryResponse.finalSummary,
-              })
-            );
-            dispatch(setInterviewStatus("completed"));
-          } catch (error) {
-            console.error("Summary API error:", error);
-            message.error("Failed to generate summary.");
-          }
+        if (!finalState.sessionId) {
+          message.error("Session ID is missing. Cannot save interview results.");
+          setIsProcessing(false);
+          return;
         }
-      } catch (error) {
-        console.error("Evaluate answer error:", error);
-        message.error("Failed to evaluate answer.");
-      } finally {
-        setIsEvaluating(false);
-        setProvisionalAnswer(null);
-        setIsSubmitting(false);
-      }
+
+        try {
+          // 1. Evaluate all answers in a SINGLE batch request
+          const evaluationPayload = finalState.questionsAndAnswers.map(qa => ({ question: qa.question, answer: qa.answer || "No answer.", difficulty: qa.difficulty }));
+          const evaluations = await evaluateAllAnswers(evaluationPayload).unwrap();
+
+          // Dispatch the evaluations to update the Redux store
+          dispatch(setAllEvaluations(evaluations));
+
+          const evaluatedHistory = finalState.questionsAndAnswers.map((qa, i) => ({
+            ...qa, // Spread the original question and answer
+            evaluation: evaluations[i], // Assign the entire evaluation object
+          }));
+
+        // 2. Generate Summary
+        const summaryResponse = await generateSummary({
+          chatHistory: evaluatedHistory.map(h => ({ q: h.question, a: h.answer || "" })),
+        }).unwrap();
+
+        // 3. Save the entire completed interview record
+        const newCandidateRecord = {
+          id: finalState.sessionId,
+          name: finalState.candidateInfo?.name || null,
+          email: finalState.candidateInfo?.email || null,
+          phone: finalState.candidateInfo?.phone || null,
+          occupation: finalState.candidateInfo?.occupation || null,
+          skills: finalState.candidateInfo?.skills || null,
+          experience: finalState.candidateInfo?.experience || null,
+          projects: finalState.candidateInfo?.projects || null,
+          jobRole: finalState.candidateInfo?.jobRole || null,
+          jobDescription: finalState.candidateInfo?.jobDescription || null,          
+          chatHistory: evaluatedHistory.map(qa => ({
+            q: qa.question,
+            a: qa.answer || "",
+            evaluation: qa.evaluation,
+          })),
+          finalResult: summaryResponse,
+          finalScore: summaryResponse.finalScore,
+          finalSummary: summaryResponse.overallSummary,
+          completedAt: new Date().toISOString(),
+        };
+        await saveCompletedInterview(newCandidateRecord).unwrap();
+
+        // 4. Update local state to show completion screen
+        // The payload for setFinalResult now matches the new, detailed structure
+        dispatch(setFinalResult(summaryResponse));
+        dispatch(setInterviewStatus({ status: "completed" }));
+
+        } catch (error) {
+          console.error("Final evaluation/summary error:", error);
+          message.error("Failed to finalize interview results.");
+        } finally {
+          setIsProcessing(false);
+        }
+      }, 0);
+    } else {
+      setIsProcessing(false);
     }
   };
 
-  if (interviewStatus === "completed") {
-    return null;
+  if (isProcessing && questionsAndAnswers.length === 0) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Spin size="large" tip="Preparing your personalized interview..." />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 animate-gradient" />
-      <div className="fixed inset-0 bg-gradient-to-tl from-blue-50/50 via-transparent to-pink-50/50 animate-gradient-slow" />
-      
-      {/* Floating gradient orbs */}
-      <div className="fixed top-20 left-10 w-96 h-96 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-3xl animate-float" />
-      <div className="fixed bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl animate-float-delayed" />
+    <div className="h-screen w-screen p-4 flex gap-4">
+      {/* Left Panel */}
+      <div className="w-1/3 h-full">
+        <QuestionPanel />
+      </div>
 
-      <div className="relative z-10 flex h-[calc(110vh-100px)] w-full max-w-full gap-6 px-4 py-8">
-        {/* Left Sidebar */}
-        <div className="flex w-[30%] flex-col gap-6">
-          <div className="flex-shrink-0 backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <SparklesIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                  AI Interview
-                </h1>
-                <p className="text-sm text-gray-600">Let`&apos;`s showcase your skills</p>
-              </div>
+      {/* Right Panel */}
+      <div className="w-2/3 h-full flex flex-col bg-white/20 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg overflow-hidden">
+        {/* Stepper at the top of the chat panel */}
+        {/* <InterviewStepper /> */}
+
+        <div
+          ref={listRef}
+          className="flex-grow overflow-y-auto px-6 py-4 space-y-6 scrollbar-custom"
+        >
+          {questionsAndAnswers.slice(0, currentQuestionIndex + 1).map((qa, index) => (
+            <div key={index} id={`answer-container-${index}`} className="space-y-4">
+              <ChatMessage message={<ReactMarkdown>{qa.question}</ReactMarkdown>} isAI={true} />
+              {qa.answer && <ChatMessage message={qa.answer} isAI={false} />}
             </div>
-          </div>
-          <div className="flex-grow backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-6 flex flex-col justify-between">
-            <div>
-              <ProgressIndicator />
-              <InterviewHeader />
-            </div>
-            <div className="my-auto flex flex-col items-center">
-              {currentQuestion && (
-                <CircularTimer
-                  key={currentQuestionIndex} // VERY IMPORTANT: Resets timer on new question
-                  duration={currentQuestion.time}
-                  onTimeout={() => handleAnswerSubmit("I ran out of time.")}
-                  disabled={isChatDisabled}
-                  size={220}
-                />
-              )}
-            </div>
-            <InterviewControls
-              disabled={isChatDisabled}
-              onTimeout={() => handleAnswerSubmit("I ran out of time.")}
-            />
-          </div>
+          ))}
         </div>
-
-        {/* Right Chat Area */}
-        <div className="flex w-[70%] flex-col backdrop-blur-xl bg-white/20 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 overflow-hidden">
-          <div
-            ref={listRef}
-            className="flex-grow overflow-y-auto px-6 py-8 space-y-4 scrollbar-custom"
-            style={{ scrollBehavior: "smooth" }}
-          >
-            {questionsAndAnswers.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center space-y-3">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
-                    <SparklesIcon className="w-10 h-10 text-violet-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-700">Ready to begin?</h3>
-                  <p className="text-gray-500">Your AI interviewer will ask you questions shortly</p>
-                </div>
-              </div>
-            ) : (
-              <List
-                dataSource={questionsAndAnswers}
-                renderItem={(item, index) => (
-                  <div key={index} className="space-y-4">
-                    <div className="prose prose-sm max-w-none">
-                      <ChatMessage message={<ReactMarkdown>{item.question}</ReactMarkdown>} isAI={true} />
-                    </div>
-                    {index === currentQuestionIndex && provisionalAnswer ? (
-                      <ChatMessage message={provisionalAnswer} isAI={false} />
-                    ) : item.answer && (
-                      <ChatMessage message={item.answer} isAI={false} />
-                    )}
-                  </div>
-                )}
-              />
-            )}
-          </div>
-          <div className="px-4 py-3">
-  <div className="max-w-4xl mx-auto">
-    <ChatInput onSubmit={handleAnswerSubmit} disabled={isChatDisabled} />
-  </div>
-</div>
+        <div className="p-4 border-t border-white/30">
+          <ChatInput onSubmit={handleAnswerSubmit} disabled={isChatDisabled} />
         </div>
       </div>
     </div>
@@ -218,5 +217,4 @@ const InterviewChat: React.FC = () => {
 };
 
 export default InterviewChat;
-
-// src/components/interview/InterviewChat.tsx
+           

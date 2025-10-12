@@ -8,7 +8,8 @@ export const useInterview = () => {
     candidateInfo: interviewState.candidateInfo,
     questionsAndAnswers: interviewState.questionsAndAnswers,
     currentQuestionIndex: interviewState.currentQuestionIndex,
-    finalScore: interviewState.finalScore,
-    finalSummary: interviewState.finalSummary,
+    finalResult: interviewState.finalResult,
+    finalScore: interviewState.finalResult?.finalScore,
+    finalSummary: interviewState.finalResult?.overallSummary,
   };
 };

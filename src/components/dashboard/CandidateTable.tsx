@@ -1,90 +1,67 @@
 // src/components/dashboard/CandidateTable.tsx
 "use client";
 
-import { Table, Input, TableProps } from "antd";
+import { Input, Alert, Empty, Card, Progress, Skeleton } from "antd";
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/redux/store";
-import CandidateModal from "./CandidateModal";
-import { MagnifyingGlassIcon, EyeIcon, ChartBarIcon } from "@heroicons/react/24/outline";
-import { Candidate } from "@/types/interview";
+import { useGetInterviewHistoryQuery } from "@/lib/api/interviewApi";
+import {
+  MagnifyingGlassIcon,
+  ChartBarIcon,
+  
+  CalendarDaysIcon,
+} from "@heroicons/react/24/outline";
+// import { Candidate } from "@/types/interview";
+import { useRouter } from "next/navigation";
 
-// interface Candidate {
-//   id: string;
-//   name?: string;
-//   email?: string;
-//   finalScore?: number;
-//   completedAt?: string;
-// }
-
-// const { Search } = Input;
+interface ApiError {
+  status: number;
+  data: { detail: string };
+}
 
 const CandidateTable: React.FC = () => {
-  const candidates =
-    useSelector((state: RootState) => state.interview.candidates) || [];
+  const {
+    data: candidates,
+    isLoading,
+    isError,
+    error,
+  } = useGetInterviewHistoryQuery();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(
-    null
-  );
+  const router = useRouter();
 
-  const filteredCandidates = candidates.filter(
+  const filteredCandidates = (candidates || []).filter(
     (candidate) =>
-      candidate.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      candidate.jobRole?.toLowerCase().includes(searchTerm.toLowerCase())
+  ).sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
 
-  const columns: TableProps<Candidate>['columns'] = [
-    {
-      title: <span className="font-semibold text-gray-700">Name</span>,
-      dataIndex: "name",
-      key: "name",
-      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
-      render: (text: string) => <span className="font-medium text-gray-900">{text || "N/A"}</span>,
-    },
-    {
-      title: <span className="font-semibold text-gray-700">Email</span>,
-      dataIndex: "email",
-      key: "email",
-      render: (text?: string) => <span className="text-gray-600">{text || "N/A"}</span>,
-    },
-    {
-      title: <span className="font-semibold text-gray-700">Score</span>,
-      dataIndex: "finalScore",
-      key: "finalScore",
-      sorter: (a, b) => (a.finalScore || 0) - (b.finalScore || 0),
-      render: (score: number) => (
-        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700">
-          {score || "N/A"}
-        </span>
-      ),
-    },
-    {
-      title: <span className="font-semibold text-gray-700">Completed At</span>,
-      dataIndex: "completedAt",
-      key: "completedAt",
-      render: (text: string) => (
-        <span className="text-gray-600">
-          {text ? new Date(text).toLocaleString() : "N/A"}
-        </span>
-      ),
-    },
-    {
-      title: <span className="font-semibold text-gray-700">Actions</span>,
-      key: "actions",
-      render: (_, record) => (
-        <button
-          onClick={() => setSelectedCandidate(record.id)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border-2 border-gray-200/50 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50 hover:border-violet-300 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md"
-        >
-          <EyeIcon className="w-4 h-4" />
-          View Details
-        </button>
-      ),
-    },
-  ];
+  if (isLoading) {
+    // Loading Skeleton
+    return <div className="backdrop-blur-xl bg-white/10 rounded-3xl border border-white/50 shadow-2xl p-8 h-screen">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="!bg-white/20 !backdrop-blur-sm !rounded-2xl !border-white/50">
+            <Skeleton active paragraph={{ rows: 4 }} />
+          </Card>
+        ))}
+      </div>
+    </div>;
+  }
+
+  if (isError) {
+    return (
+      <Alert
+        message="Error"
+        description={
+          (error as ApiError)?.data?.detail ||
+          "Failed to load interview history. Please try again later."
+        }
+        type="error"
+        showIcon
+      />
+    );
+  }
 
   return (
-    <div className="backdrop-blur-xl bg-white/10 rounded-3xl border border-white/50 shadow-2xl shadow-purple-500/10 p-8">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
@@ -95,48 +72,65 @@ const CandidateTable: React.FC = () => {
               Candidate Dashboard
             </h2>
             <p className="text-gray-600 text-sm mt-1">
-              {filteredCandidates.length} {filteredCandidates.length === 1 ? "candidate" : "candidates"} found
+              {filteredCandidates.length} {filteredCandidates.length === 1 ? "entry" : "entries"} found
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="relative max-w-md">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
             <MagnifyingGlassIcon className="w-5 h-5" />
           </div>
           <Input
-            placeholder="Search by name or email..."
+            placeholder="Search by job role..."
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl border-2 border-gray-200/50 hover:border-violet-300 focus:border-violet-400 bg-white/20 backdrop-blur-sm transition-all"
             allowClear
           />
         </div>
       </div>
-      
-      <div className="bg-white/20 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/50">
-        <Table
-          columns={columns}
-          dataSource={filteredCandidates}
-          rowKey="id"
-          pagination={{ 
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} candidates`,
-            className: "px-4 py-4  "
-          }}
-          className="candidate-table"
-          rowClassName="bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-violet-50/50 transition-colors duration-200"
-        />
-      </div>
-      
-      {selectedCandidate && (
-        <CandidateModal
-          candidateId={selectedCandidate}
-          onClose={() => setSelectedCandidate(null)}
-        />
+
+      {filteredCandidates.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCandidates.map((candidate) => (
+            <Card
+              key={candidate.id}
+              hoverable
+              onClick={() => router.push(`/dashboard/${candidate.id}`)}
+              className="!bg-white/20 !backdrop-blur-sm !rounded-2xl !border-white/50 !shadow-lg hover:!shadow-xl hover:!scale-[1.02] transition-all duration-300"
+            >
+              <div className="flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="text-xl font-bold text-gray-800 line-clamp-2">
+                      {candidate.jobRole || "General Interview"}
+                    </h3>
+                    <Progress type="circle" percent={candidate.finalScore || 0} size={50} />
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-3">
+                    <CalendarDaysIcon className="w-4 h-4" />
+                    <span>
+                      {candidate.completedAt
+                        ? new Date(candidate.completedAt).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <span className="text-violet-600 font-semibold hover:text-violet-800">
+                    View Report →
+                  </span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Empty description="No interview history found." className="py-16" />
       )}
+
     </div>
   );
 };
